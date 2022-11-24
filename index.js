@@ -1,0 +1,112 @@
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const authRoutes = require("./routes/auth");
+const messageRoutes = require("./routes/messages");
+const roomRoutes = require("./routes/room");
+const app = express();
+const socket = require("socket.io");
+require("dotenv").config();
+
+app.use(cors());
+app.use(express.json());
+
+mongoose
+    .connect(process.env.MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(() => {
+        console.log("DB Connetion Successfull");
+    })
+    .catch((err) => {
+        console.log(err.message);
+    });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/room/", roomRoutes);
+
+const server = app.listen(process.env.PORT, () =>
+    console.log(`Server started on ${process.env.PORT}`)
+);
+const io = socket(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        credentials: true,
+    },
+});
+
+global.onlineUsers = new Map();
+io.on("connection", (socket) => {
+    global.chatSocket = socket;
+    socket.on("add-user", (userId) => {
+        // console.log("Co nguoi online");
+        onlineUsers.set(userId, socket.id);
+        // console.log("online: "+onlineUsers);
+        // console.log(onlineUsers);
+    });
+    socket.on("deleted-msg", (data) => {
+        const sendUserSocket = onlineUsers.get(data.to);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit("msg-deleted", {
+                id: data.id,
+                to: data.to,
+                from: data.from,
+                deletedFromSelf: data.deletedFromSelf,
+                deletedToAll: data.deletedToAll,
+            });
+        }
+        if (data.to.length > 2) {
+            for (let i = 0; i < data.to.length; i++) {
+                const sendUserSocket = onlineUsers.get(data.to[i]);
+
+                if (sendUserSocket) {
+                    socket.to(sendUserSocket).emit("msg-deleted", {
+                        id: data.id,
+                        to: data.to,
+                        from: data.from,
+                        deletedFromSelf: data.deletedFromSelf,
+                        deletedToAll: data.deletedToAll,
+                    });
+                }
+            }
+        }
+    });
+    socket.on("send-msg", (data) => {
+        const sendUserSocket = onlineUsers.get(data.to);
+        // console.log("Sender socket " + sendUserSocket);
+
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit("msg-recieve", {
+                id: data.id,
+                msg: data.msg,
+                react: data.react,
+                namesend: data.namesend,
+                avatarImage: data.avatarImage,
+                files: data.files,
+                image: data.image,
+                deleteFromSelf: data.deleteFromSelf,
+                deleteToAll: data.deleteToAll,
+            });
+        }
+
+        if (data.to.length > 2) {
+            for (let i = 0; i < data.to.length; i++) {
+                const sendUserSocket = onlineUsers.get(data.to[i]);
+
+                if (sendUserSocket) {
+                    socket.to(sendUserSocket).emit("msg-recieve", {
+                        image: data.image,
+                        id: data.id,
+                        msg: data.msg,
+                        react: data.react,
+                        namesend: data.namesend,
+                        avatarImage: data.avatarImage,
+                        files: data.files,
+                    });
+                }
+            }
+        }
+    });
+});
