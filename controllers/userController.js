@@ -44,9 +44,8 @@ module.exports.register = async (req, res, next) => {
         // if (usernameCheck)
         //   return res.json({ msg: "Username already used", status: false });
         const emailCheck = await User.findOne({ phonenumber });
-        if (emailCheck) {
+        if (emailCheck)
             return res.json({ msg: "SDT already used", status: false });
-        }
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await User.create({
             username,
@@ -54,7 +53,7 @@ module.exports.register = async (req, res, next) => {
             password: hashedPassword,
         });
 
-        const createListFriend = await Friend.create({
+        const friend = await Friend.create({
             userId: user._id,
             friendId: [],
         });
@@ -110,4 +109,26 @@ module.exports.logOut = (req, res, next) => {
     } catch (ex) {
         next(ex);
     }
+};
+module.exports.updateUser = async (req, res, next) => {
+    console.log("Update User");
+    try {
+        const { avartar, userName, gender, date, phonenumber } = req.body;
+        // console.log(date);
+        // console.log(date.slice(0, 10));
+        const filter = { phonenumber: phonenumber };
+        const update = {
+            username: userName,
+            gender: gender,
+            DateOfBirth: date,
+        };
+        const request = await User.findOneAndUpdate(filter, update);
+        const request2 = await User.find({
+            phonenumber: phonenumber,
+        });
+
+        res.status(200).json({
+            data: request2,
+        });
+    } catch (error) {}
 };
