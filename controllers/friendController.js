@@ -2,9 +2,9 @@ const Friend = require("../models/friendModal");
 const User = require("../models/userModel");
 var mongoose = require("mongoose");
 module.exports.getUserByPhoneNumber = async (req, res, next) => {
-    console.log("Get UserBy phone");
     try {
         const { phoneNumber, currentUserId } = req.body;
+
         const user = await User.find({
             phonenumber: [phoneNumber],
         }).sort({ createdAt: 1 });
@@ -33,7 +33,6 @@ module.exports.getUserByPhoneNumber = async (req, res, next) => {
 };
 
 module.exports.getIdOfListFriendByPhoneNumber = async (req, res, next) => {
-    console.log("Get UserBy phone");
     try {
         const { phoneNumber, currentUserId } = req.body;
         const user = await User.find({
@@ -53,7 +52,6 @@ module.exports.getIdOfListFriendByPhoneNumber = async (req, res, next) => {
         };
 
         if (AllFriendId.indexOf(currentId) === -1) {
-            console.log("Trung");
         } else {
             handleAdd();
         }
@@ -66,13 +64,13 @@ module.exports.getIdOfListFriendByPhoneNumber = async (req, res, next) => {
 module.exports.getCurrentFriend = async (req, res, next) => {
     try {
         const { phoneNumber, currentUserId } = req.body;
-        console.log(currentUserId);
+
         const currentFriendListOf = await Friend.find({
             userId: currentUserId,
         }).sort({
             createdAt: 1,
         });
-
+        console.log(currentFriendListOf);
         const id = currentFriendListOf[0].friendId;
 
         const lisyId = [];
@@ -94,7 +92,8 @@ module.exports.getCurrentFriend = async (req, res, next) => {
         });
 
         let uniqueChars = [...new Set(listCurruentFriend)];
-
+        console.log(uniqueChars);
+        console.log(currentFriendListOf[0].friendId);
         res.status(200).json({
             //danh sách id trong list FriendId
             data: currentFriendListOf[0].friendId,
@@ -102,6 +101,7 @@ module.exports.getCurrentFriend = async (req, res, next) => {
             data2: uniqueChars,
         });
     } catch (error) {
+        console.log(err);
         next(error);
     }
 };
@@ -110,13 +110,13 @@ module.exports.getAllCurrentFriend = async (req, res, next) => {
     console.log("getAllCurrentFriend");
     try {
         const { phoneNumber, currentUserId } = req.body;
-        console.log(currentUserId);
+
         const currentFriendListOf = await Friend.find({
             userId: currentUserId,
         }).sort({
             createdAt: 1,
         });
-        console.log(currentFriendListOf);
+
         res.status(200).json({
             //danh sách id trong list FriendId
             data: currentFriendListOf[0].friendId,
@@ -131,7 +131,7 @@ module.exports.addFriend = async (req, res, next) => {
     console.log("Add Friend");
     try {
         const { listFriendOfId, friendId } = req.body;
-        console.log(listFriendOfId);
+
         const member = await Friend.findByIdAndUpdate(
             listFriendOfId,
             {

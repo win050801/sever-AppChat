@@ -52,9 +52,49 @@ io.on("connection", (socket) => {
         onlineUsers.set(userId, socket.id);
     });
 
+    socket.on("unfriend", (data) => {
+        const sendUserSocket = onlineUsers.get(data.to);
+
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit("un-friend", {
+                data: data.to,
+            });
+        }
+    });
+
+    socket.on("add-into-list-friend", (data) => {
+        console.log("add-into-list-friend");
+        const sendUserSocket = onlineUsers.get(data.to);
+        console.log(sendUserSocket);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit("list-friend-add-into", {
+                data: data.to,
+            });
+        }
+    });
+
+    socket.on("reject-request-add-friend", (data) => {
+        console.log("reject-request-add-friend");
+        // console.log(data.to);
+        const sendUserSocket = onlineUsers.get(data.to);
+        // console.log(sendUserSocket);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit("add-friend-reject-request", {
+                currentPhoneNumber: data.currentPhoneNumber,
+            });
+        }
+    });
+
     socket.on("send-request-add-friend", (data) => {
         console.log("request-add-friend");
-        console.log(data);
+        console.log(data.response);
+        const sendUserSocket = onlineUsers.get(data.to);
+
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit("add-friend-request", {
+                requestFriend: data.response,
+            });
+        }
     });
 
     socket.on("deleted-msg", (data) => {
