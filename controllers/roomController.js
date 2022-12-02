@@ -61,6 +61,21 @@ module.exports.getRoom = async (req, res, next) => {
       next(ex);
     }
   };
+  module.exports.deleteRoom = async (req, res, next) => {
+    // console.log("get MSG");
+    try {
+      const { id } = req.body;
+     
+      const rooms = await Room.deleteOne({
+        _id: id
+      })
+  
+      
+      res.json(rooms);
+    } catch (ex) {
+      next(ex);
+    }
+  };
   module.exports.updateManager = async (req, res, next) => {
     try {
       const {id,idManager} = req.body
